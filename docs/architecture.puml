@@ -1,0 +1,50 @@
+@startuml Assessment-Chat-RAG Architecture
+
+!define AWSPUML
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Component>
+
+LAYOUT_WITH_LEGEND()
+
+' Context Diagram
+title System Context - Assessment Chat RAG
+
+System_Boundary(rag_system, "Assessment Chat RAG") {
+    Container(streamlit, "Streamlit Web App", "Python/Streamlit", "Multi-PDF Chat Interface")
+    Container(pdf_loader, "PDF Loader", "PyPDF2", "Extract text from PDFs")
+    Container(chunker, "Semantic Chunker", "Python", "Split into coherent chunks")
+    Container(embedder, "Embedding Generator", "Google Gemini API", "Generate 768-D vectors")
+    Container(vectorstore, "FAISS Vector Store", "FAISS/NumPy", "Persistent vector index")
+    Container(retriever, "Unified Retriever", "Python", "PDF + Memory search")
+    Container(guardrails, "Hallucination Guardrails", "Python", "Confidence check & grounding")
+    Container(generator, "GROQ LLM Generator", "GROQ API", "Generate responses")
+    Container(memory, "Conversation Memory", "JSON + FAISS", "Persistent timestamps")
+}
+
+' External Systems
+System_Ext(groq_api, "GROQ API", "LLM Service")
+System_Ext(gemini_api, "Google Gemini API", "Embedding Service")
+System_Ext(file_system, "Local File System", "Persistent Storage")
+
+Person(user, "User", "Asks questions about PDFs")
+
+' Relationships
+Rel(user, streamlit, "Uploads PDFs & Queries")
+Rel(streamlit, pdf_loader, "Load PDF")
+Rel(pdf_loader, chunker, "Chunks text")
+Rel(chunker, embedder, "Embed chunks")
+Rel(embedder, gemini_api, "Gemini embed")
+Rel(embedder, vectorstore, "Store vectors")
+Rel(vectorstore, file_system, "Persist FAISS index")
+Rel(streamlit, retriever, "Search for context")
+Rel(retriever, vectorstore, "Query index")
+Rel(retriever, guardrails, "Validate grounding")
+Rel(guardrails, generator, "Safe prompt")
+Rel(generator, groq_api, "GROQ inference")
+Rel(generator, memory, "Store turn")
+Rel(memory, file_system, "Persist JSON")
+Rel(memory, vectorstore, "Embed memory")
+Rel(memory, streamlit, "Retrieve history")
+
+@enduml
