@@ -3,6 +3,7 @@ Configuration management and environment validation.
 """
 
 import os
+import streamlit as st
 from pathlib import Path
 from typing import Optional
 
@@ -47,7 +48,7 @@ class Config:
     EMBEDDING_DIMENSION = 768
 
     # ------------------------------------------------------------------
-    # LLM (Groq) ✅ VERIFIED
+    # LLM (Groq)
     # ------------------------------------------------------------------
 
     LLM_MODEL = "llama-3.1-8b-instant"
@@ -73,13 +74,20 @@ class Config:
     GUARDRAIL_THRESHOLD = 0.5
 
     # ------------------------------------------------------------------
-    # LOAD ENV
+    # LOAD ENV (LOCAL + STREAMLIT CLOUD SAFE)
     # ------------------------------------------------------------------
 
     @classmethod
     def load_from_env(cls):
-        cls.GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-        cls.GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+        cls.GROQ_API_KEY = (
+            os.getenv("GROQ_API_KEY", "").strip()
+            or st.secrets.get("GROQ_API_KEY", "").strip()
+        )
+
+        cls.GEMINI_API_KEY = (
+            os.getenv("GEMINI_API_KEY", "").strip()
+            or st.secrets.get("GEMINI_API_KEY", "").strip()
+        )
 
         cls.VECTORS_DIR.mkdir(parents=True, exist_ok=True)
         cls.MEMORY_DIR.mkdir(parents=True, exist_ok=True)
@@ -94,13 +102,13 @@ class Config:
     @classmethod
     def validate(cls) -> tuple[bool, str]:
         if not cls.GROQ_API_KEY:
-            return False, "❌ GROQ_API_KEY not set in .env"
+            return False, "❌ GROQ_API_KEY not set"
         if not cls.GEMINI_API_KEY:
-            return False, "❌ GEMINI_API_KEY not set in .env"
+            return False, "❌ GEMINI_API_KEY not set"
         return True, "✅ Configuration valid"
 
     # ------------------------------------------------------------------
-    # UI / DEBUG HELPER ✅ THIS FIXES YOUR ERROR
+    # UI / DEBUG HELPER
     # ------------------------------------------------------------------
 
     @classmethod
